@@ -1,18 +1,19 @@
-# build folders
+# --- Basura de compilación ---
 build/
 dist/
+nbproject/private/    <-- ESTE ES EL CULPABLE DE LOS CONFLICTOS
+nbproject/Makefile-*
+nbproject/Package-*
 
-# compiled outputs
-*.hex
-*.elf
-*.o
-*.map
-*.lst
-
-# MPLAB cache
-*.log
-*.d
-
-# OS basura
+# --- Basura de Sistema ---
 .DS_Store
 Thumbs.db
+
+# --- Archivos de depuración ---
+*.o
+*.d
+*.elf
+*.hex
+*.cmf
+*.lst
+*.log
