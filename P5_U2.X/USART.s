@@ -12,7 +12,9 @@
  
 W_TEMP      EQU 0x70
 STATUS_TEMP EQU 0x71
-REG1        EQU 0x72
+PCLATH_TEMP EQU 0x72
+REG1        EQU 0x73
+	
 	
 PSECT   Code, delta=2
         ORG     0x00
