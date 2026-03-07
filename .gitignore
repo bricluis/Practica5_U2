@@ -1,23 +1,26 @@
-# --- Archivos de Sistema ---
+# --- Archivos de Sistema (Mac y Windows) ---
 .DS_Store
 .DS_Store?
 **/._*
 **/Thumbs.db
 
 # --- Carpetas de Compilación de MPLAB X ---
-# El **/ hace que busque build y dist dentro de P5_U2.X
 **/build/
 **/dist/
-**/disassembly/
 **/debug/
+**/disassembly/
 
-# --- Configuración Local y Privada ---
+# --- Configuración Privada y Local (Conflictos Mac/Win) ---
+# Ignoramos la carpeta private y los archivos .mk generados
 **/nbproject/private/
 **/nbproject/Makefile-*
 **/nbproject/Package-*
+**/*.mk
 
-# --- Archivos de salida (objetos, hex, etc) ---
-*.[o,d,p]1
+# --- Archivos de Salida y Objetos (Binarios) ---
+*.o
+*.d
+*.p1
 *.hex
 *.elf
 *.cmf
@@ -30,6 +33,6 @@
 *.sdb
 *.bak
 
-# Ignorar cambios en los Makefiles generados por el IDE
-**/Makefile
-**/nbproject/Makefile-*
+# --- Archivos Temporales de Editores ---
+*~
+*.swp
