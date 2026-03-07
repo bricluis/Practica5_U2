@@ -1,0 +1,18 @@
+# build folders
+build/
+dist/
+
+# compiled outputs
+*.hex
+*.elf
+*.o
+*.map
+*.lst
+
+# MPLAB cache
+*.log
+*.d
+
+# OS basura
+.DS_Store
+Thumbs.db
