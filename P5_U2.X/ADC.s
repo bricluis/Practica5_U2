@@ -46,11 +46,11 @@ MAIN_LOOP:
 ; ==========================================================
 CONFIG_ADC:
         banksel ADCON1          ; Banco 1
-        movlw   b'10000100'     ; Justificación derecha, pines analógicos
+        movlw   0b10000100     ; Justificación derecha, pines analógicos
         movwf   ADCON1
         
         banksel ADCON0          ; Banco 0
-        movlw   b'01000001'     ; Fosc/8, Canal 0, ADON=1
+        movlw   0b01000001     ; Fosc/8, Canal 0, ADON=1
         movwf   ADCON0
         return                  ; ¡Un solo return al terminar de configurar todo!
 
@@ -59,7 +59,7 @@ CONFIG_ADC:
 ; ==========================================================
 LEER_HUMEDAD:
         banksel ADCON0
-        movlw   b'01000001'     ; Canal 0 (AN0)
+        movlw   0b01000001     ; Canal 0 (AN0)
         movwf   ADCON0
         call    RETARDO_20US    
         bsf     ADCON0, 1       ; 1 es el bit GO en XC8
@@ -80,7 +80,7 @@ ESPERA_HUMEDAD:
  
 LEER_TEMP:
         banksel ADCON0
-        movlw   b'01001001'     ; Canal 1 (AN1) 
+        movlw   0b01001001     ; Canal 1 (AN1) 
         movwf   ADCON0
         call    RETARDO_20US    
         bsf     ADCON0, 1       
@@ -100,7 +100,7 @@ ESPERA_TEMP:
         return
         
 RETARDO_20US:
-        movlw   d'5'            
+        movlw   5            
         movwf   CONT_RETARDO    
 BUCLE_20US:
         decfsz  CONT_RETARDO, f 
