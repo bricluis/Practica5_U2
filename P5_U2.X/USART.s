@@ -51,9 +51,8 @@ INICIO:
 ;;CONFIGURCION ADC (PENDIENTE)
 
 LOOP:
-;;ELEGIR PUERTO ADC A LEER
-   call LEER_ADC
-   call ADC_TO_DIGITS 
+    ;;meter datos en bianrio a TEMPH y TEMPL
+   call BINARY_TO_DECIMAL
     
     movlw   'T'
     call    USART_TX
@@ -75,9 +74,8 @@ LOOP:
     addwf   UNIDAD, W
     call    USART_TX
     
-    ;;ELEGIR PUERTO ADC A LEER
-   call LEER_ADC
-   call ADC_TO_DIGITS 
+   ;;meter datos en bianrio a TEMPH y TEMPL
+   call BINARY_TO_DECIMAL 
     
     movlw   'C'       
     call    USART_TX
@@ -120,39 +118,7 @@ ESPERAR:
     return
 
     
-LEER_ADC:
-    bsf     ADCON0, 0       ; Enciende el módulo ADC (ADON = 1)
-    
-    ; --- ACQUISITION TIME ---
-    ; Esperamos unos 20us para que el capacitor se cargue
-    movlw   5               ; Ajusta este valor según tu velocidad
-    movwf   CONT1
-    
-DELAY_ACQ:
-    decfsz  CONT1, f
-    goto    DELAY_ACQ
-    
-    ; --- START CONVERSION ---
-    bsf     ADCON0, 2       ; Inicia la conversión (Bit GO/DONE)
-    
-WAIT_ADC:
-    btfsc   ADCON0, 2       ; ¿Ya terminó? (GO/DONE se pone en 0 solo)
-    goto    WAIT_ADC
-    
-; --- SAVE RESULT ---
-  
-    movf    ADRESH, W       ; ADRESH está en el Banco 0
-    movwf   TEMPH           ; Guarda los 2 bits más altos
-    
-    bsf     STATUS, 5       ; ¡CAMBIO AL BANCO 1!
-    movf    ADRESL, W       ; ADRESL está en el Banco 1
-    bcf     STATUS, 5       ; ¡REGRESO AL BANCO 0!
-    movwf   TEMPL           ; Guarda los 8 bits más bajos
- 
-    
-    return
-    
- ADC_TO_DIGITS:
+ BINARY_TO_DECIMAL:
     
 clrf CENTENA
 clrf DECENA
