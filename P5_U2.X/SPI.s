@@ -43,13 +43,6 @@ ISR:
     movf    PCLATH,w
     movwf   PCLATH_TEMP
 
-    ; Chequeo de banderas de interrupciones
-    
-    btfsc INTCON,T0IF
-    call ISR_TMR0
-
-    btfsc PIR1,RCIF
-    call ISR_USART
 
     
 SALIR_ISR:
@@ -62,12 +55,7 @@ SALIR_ISR:
     swapf   W_TEMP, w
     retfie                   ; retornar de la interrupcion y volver al bucle
 
-    
-ISR_TMR0:
-    bcf INTCON,T0IF
-    ; codigo
-    return
-    
+
 
 ISR_USART:
     movf RCREG,w
