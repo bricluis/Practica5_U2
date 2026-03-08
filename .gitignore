@@ -1,1 +1,38 @@
-/P5_U2.X/build/
+# --- Archivos de Sistema (Mac y Windows) ---
+.DS_Store
+.DS_Store?
+**/._*
+**/Thumbs.db
+
+# --- Carpetas de Compilación de MPLAB X ---
+**/build/
+**/dist/
+**/debug/
+**/disassembly/
+
+# --- Configuración Privada y Local (Conflictos Mac/Win) ---
+# Ignoramos la carpeta private y los archivos .mk generados
+**/nbproject/private/
+**/nbproject/Makefile-*
+**/nbproject/Package-*
+**/*.mk
+
+# --- Archivos de Salida y Objetos (Binarios) ---
+*.o
+*.d
+*.p1
+*.hex
+*.elf
+*.cmf
+*.lst
+*.map
+*.sym
+*.log
+*.pre
+*.rlf
+*.sdb
+*.bak
+
+# --- Archivos Temporales de Editores ---
+*~
+*.swp
