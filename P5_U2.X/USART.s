@@ -14,6 +14,15 @@ W_TEMP      EQU 0x70
 STATUS_TEMP EQU 0x71
 PCLATH_TEMP EQU 0x72
 REG1        EQU 0x73
+TEMP	    EQU 0x74
+HUM	    EQU 0x75	    
+        CENTENA	EQU 0x076
+	DECENA	EQU 0x077
+        UNIDAD	EQU 0x078
+CONT1	EQU	0x79
+TEMPL	EQU	0X7A
+TEMPH	EQU	0x7B
+	
 	
 	
 PSECT   Code, delta=2
@@ -24,61 +33,178 @@ PSECT   Code, delta=2
 	goto ISR
     
 INICIO:
-    ; CONFIGURACION DE PUERTOS
-    bsf     STATUS, 5        ; cambiar al banco 1 (RP0 es el bit 5)
-    bcf     STATUS, 6        ; (RP1 es el bit 6)
-    clrf    TRISB            ; configurar puerto B como salida para los LEDs
+    ; --- BANCO 1 ---
+    BANKSEL TRISC
+    bcf     TRISC, 6         ; TX DEBE SER SALIDA (0)
+    bsf     TRISC, 7         ; RX COMO ENTRADA (1)
 
-    ; CONFIGURACION DE PINES USART (RC6/TX entrada, RC7/RX entrada)
-    bsf     TRISC, 6
-    bsf     TRISC, 7
-
-    ; CONFIGURACION DE USART A 9600 BAUDIOS (ASUMIENDO CRISTAL DE 4MHz)
-    movlw   25            ; valor de SPBRG para 9600 bps con Fosc=4MHz y BRGH=1
+    movlw   25               ; 9600 bps @ 4MHz
     movwf   SPBRG
-    bsf     TXSTA, 2         ; habilitar alta velocidad de baudios (BRGH es bit 2)
-    bcf     TXSTA, 4         ; configurar para modo asincrono (SYNC es bit 4)
-    bsf     TXSTA, 5         ; habilitar transmision (TXEN es bit 5)
+    
+    movlw   00100100B        ; TXEN=1, BRGH=1
+    movwf   TXSTA
 
-    ; HABILITAR INTERRUPCION DE RECEPCION
-    bsf     PIE1, 5          ; habilitar interrupcion por recepcion serial (RCIE es bit 5)
+    ; --- BANCO 0 ---
+    BANKSEL RCSTA
+    bsf     RCSTA, 7         ; SPEN=1 (Encender puerto serial)
 
-    ; REGRESAR AL BANCO 0
-    bcf     STATUS, 5        ; (RP0 es el bit 5)
-
-    ; CONFIGURAR RECEPCION Y ENCENDER PUERTO SERIAL
-    bsf     RCSTA, 7         ; habilitar puerto serial (SPEN es bit 7)
-    bsf     RCSTA, 4         ; habilitar recepcion continua (CREN es bit 4)
-
-    ; LIMPIAR PORTB ANTES DE INICIAR
-    clrf    PORTB
-
-    ; CONFIGURACION DE INTERRUPCIONES GLOBALES
-    bsf     INTCON, 6        ; habilitar interrupciones de perifericos (PEIE es bit 6)
-    bsf     INTCON, 7        ; habilitar interrupciones globales (GIE es bit 7)
+;;CONFIGURCION ADC (PENDIENTE)
 
 LOOP:
-    ; BUCLE PRINCIPAL DE ESPERA
-    nop
-    goto    LOOP             ; dejar el USART escuchando y esperar interrupcion
+;;ELEGIR PUERTO ADC A LEER
+   call LEER_ADC
+   call ADC_TO_DIGITS 
+    
+    movlw   'T'
+    call    USART_TX
+    movlw   ':'
+    call    USART_TX
+    movlw   ' '
+    call    USART_TX
+  
+       ; Imprimimos los enteros
+    movlw   0x30
+    addwf   CENTENA, W
+    call    USART_TX
+    
+    movlw   0x30
+    addwf   DECENA, W
+    call    USART_TX
+    
+    movlw   0x30
+    addwf   UNIDAD, W
+    call    USART_TX
+    
+    ;;ELEGIR PUERTO ADC A LEER
+   call LEER_ADC
+   call ADC_TO_DIGITS 
+    
+    movlw   'C'       
+    call    USART_TX
+    movlw   ' '
+    call    USART_TX
+    
+    movlw   'H'
+    call    USART_TX
+    movlw   ':'
+    call    USART_TX
+    
+ ; Imprimimos los enteros
+    movlw   0x30
+    addwf   CENTENA, W
+    call    USART_TX
+    
+    movlw   0x30
+    addwf   DECENA, W
+    call    USART_TX
+    
+    movlw   0x30
+    addwf   UNIDAD, W
+    call    USART_TX
 
+    ; Salto de línea para que no se pegue el texto en la PC
+    movlw   0x0D             ; Retorno de carro (\r)
+    call    USART_TX
+    movlw   0x0A             ; Salto de línea (\n)
+    call    USART_TX
+    
+    goto    LOOP
+
+; --- Subrutina TX ---
+USART_TX:
+    BANKSEL PIR1             ; Asegurar Banco 0
+ESPERAR:
+    btfss   PIR1, 4          ; ¿Está el buffer vacío?
+    goto    ESPERAR          ; No, esperar
+    movwf   TXREG            ; Sí, mandar el dato (limpia TXIF automáticamente)
+    return
+
+    
+LEER_ADC:
+    bsf     ADCON0, 0       ; Enciende el módulo ADC (ADON = 1)
+    
+    ; --- ACQUISITION TIME ---
+    ; Esperamos unos 20us para que el capacitor se cargue
+    movlw   5               ; Ajusta este valor según tu velocidad
+    movwf   CONT1
+    
+DELAY_ACQ:
+    decfsz  CONT1, f
+    goto    DELAY_ACQ
+    
+    ; --- START CONVERSION ---
+    bsf     ADCON0, 2       ; Inicia la conversión (Bit GO/DONE)
+    
+WAIT_ADC:
+    btfsc   ADCON0, 2       ; ¿Ya terminó? (GO/DONE se pone en 0 solo)
+    goto    WAIT_ADC
+    
+; --- SAVE RESULT ---
+  
+    movf    ADRESH, W       ; ADRESH está en el Banco 0
+    movwf   TEMPH           ; Guarda los 2 bits más altos
+    
+    bsf     STATUS, 5       ; ¡CAMBIO AL BANCO 1!
+    movf    ADRESL, W       ; ADRESL está en el Banco 1
+    bcf     STATUS, 5       ; ¡REGRESO AL BANCO 0!
+    movwf   TEMPL           ; Guarda los 8 bits más bajos
+ 
+    
+    return
+    
+ ADC_TO_DIGITS:
+    
+clrf CENTENA
+clrf DECENA
+clrf UNIDAD
+
+    
+    RESTACIEN:
+    movlw   0x64
+    subwf   TEMPL, f
+    movlw   0x00
+    btfss   STATUS, 0
+    addlw   1
+    subwf   TEMPH, f
+    btfsc   STATUS, 0
+    goto    CIEN
+    
+    ; Restore
+    movlw   0x64
+    addwf   TEMPL, f
+
+RESTADIEZ:
+    movlw   0x0A
+    subwf   TEMPL, f
+    btfsc   STATUS, 0
+    goto    DIEZ
+    ; Restore
+    movlw   0x0A
+    addwf   TEMPL, f
+
+RESTAUNO:
+    movlw   0x01
+    subwf   TEMPL, f
+    btfsc   STATUS, 0
+    goto    UNO
+    
+    return
+
+CIEN:
+    incf    CENTENA, f
+    goto    RESTACIEN
+DIEZ:
+    incf    DECENA, f
+    goto    RESTADIEZ
+UNO:
+    incf    UNIDAD, f
+    goto    RESTAUNO
 ISR:
     ; GUARDAR CONTEXTO DE W Y STATUS
     movwf   W_TEMP
     swapf   STATUS, w
     movwf   STATUS_TEMP
 
-    ; VERIFICAR SI LA INTERRUPCION FUE GENERADA POR RECEPCION
-    btfss   PIR1, 5          ; verificar la bandera de recepcion (RCIF es bit 5)
-    goto    SALIR_ISR
-    goto    DATORECIBIDO
-
-DATORECIBIDO:
-    ; LEER, MOSTRAR EN LEDS Y TRANSMITIR COMO ECO
-    movf    RCREG, w         ; leer dato recibido (esto limpia bandera RCIF)
-    movwf   REG1             ; guardar dato en variable temporal
-    movwf   PORTB            ; mostrar el dato en forma binaria en el puerto B
-    movwf   TXREG            ; retransmitir el mismo dato a la PC como ECO
 
 SALIR_ISR:
     ; RESTAURAR CONTEXTO DE STATUS Y W Y SALIR
