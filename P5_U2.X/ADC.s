@@ -9,14 +9,21 @@
   CONFIG  CP = OFF
 
   #include <xc.inc>
- 
+  
+ ; Declaramos estas etiquetas como públicas (exportables)
+    GLOBAL CONFIG_ADC
+    GLOBAL LEER_HUMEDAD
+    GLOBAL LEER_TEMP
+    
 W_TEMP		EQU	0x70
 STATUS_TEMP	EQU	0x71
 PCLATH_TEMP	EQU	0x72
-VALOR_HUM_L     EQU     0x73    ; Guarda los 8 bits bajos del ADC (Humedad)
-VALOR_HUM_H     EQU     0x74    ; Guarda los 2 bits altos del ADC (Humedad)
-VALOR_TEMP_L    EQU     0x75    ; Guarda los 8 bits bajos del ADC (Temp.)
-VALOR_TEMP_H    EQU     0x76    ; Guarda los 2 bits altos del ADC (Temp.)
+TEMPL		EQU	0x73
+TEMPH		EQU	0x74
+;VALOR_HUM_L     EQU     0x73    ; Guarda los 8 bits bajos del ADC (Humedad)
+;VALOR_HUM_H     EQU     0x74    ; Guarda los 2 bits altos del ADC (Humedad)
+;VALOR_TEMP_L    EQU     0x75    ; Guarda los 8 bits bajos del ADC (Temp.)
+;VALOR_TEMP_H    EQU     0x76    ; Guarda los 2 bits altos del ADC (Temp.)
 CONT_RETARDO    EQU     0x77    ; Variable contador para la subrutina de 20us   
     
 PSECT   Code, delta=2
@@ -69,13 +76,13 @@ ESPERA_HUMEDAD:
         
         banksel ADRESL
         movf    ADRESL, W
-        banksel VALOR_HUM_L
-        movwf   VALOR_HUM_L
+        banksel TEMPL
+        movwf   TEMPL ;; usar la variable de luis
         
         banksel ADRESH
         movf    ADRESH, W
-        banksel VALOR_HUM_H
-        movwf   VALOR_HUM_H
+        banksel TEMPH
+        movwf   TEMPH ;; usar la variable de luis
         return
  
 LEER_TEMP:
@@ -90,13 +97,13 @@ ESPERA_TEMP:
         
         banksel ADRESL
         movf    ADRESL, W
-        banksel VALOR_TEMP_L
-        movwf   VALOR_TEMP_L
+        banksel TEMPL;; usar la variable de luis
+        movwf   TEMPL
         
         banksel ADRESH
         movf    ADRESH, W
-        banksel VALOR_TEMP_H
-        movwf   VALOR_TEMP_H
+        banksel TEMPH ;; usar la variable de luis
+        movwf   TEMPH
         return
         
 RETARDO_20US:

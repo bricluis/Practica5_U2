@@ -9,6 +9,11 @@
   CONFIG  CP = OFF
 
 #include <xc.inc>
+  
+  ; Importamos las rutinas que viven en otros archivos
+    EXTRN CONFIG_ADC
+    EXTRN LEER_HUMEDAD
+    EXTRN LEER_TEMP
  
 W_TEMP      EQU 0x70
 STATUS_TEMP EQU 0x71
@@ -49,7 +54,9 @@ INICIO:
     bsf     RCSTA, 7         ; SPEN=1 (Encender puerto serial)
 
 ;;CONFIGURCION ADC (PENDIENTE)
-
+    
+    call    CONFIG_ADC
+    
 LOOP:
     ;;GUARDA LO QUE ESTÁ EN VALOR_TEMPH EN TEMPH Y LO QUE ESTÁ EN VALORTEMPL EN TEMPL
    call LEER_TEMP
