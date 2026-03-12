@@ -1,13 +1,3 @@
-; PIC16F877A Configuration Bit Settings
-  CONFIG  FOSC = XT
-  CONFIG  WDTE = OFF
-  CONFIG  PWRTE = OFF
-  CONFIG  BOREN = OFF
-  CONFIG  LVP = OFF
-  CONFIG  CPD = OFF
-  CONFIG  WRT = OFF
-  CONFIG  CP = OFF
-
 #include <xc.inc>
      
 CENTENA	EQU	0x076
@@ -19,13 +9,8 @@ TEMPH	EQU	0x7B
 	
 	
 PSECT   Code, delta=2
-        ORG     0x00
-        goto    INICIO
 
-        ORG     0x04
-
-    
-INICIO:
+USART_CONFIG:
     ; --- BANCO 1 ---
     BANKSEL TRISC
     bcf     TRISC, 6         ; TX DEBE SER SALIDA (0)
@@ -43,7 +28,7 @@ INICIO:
 
 ;;CONFIGURCION ADC (PENDIENTE)
 
-LOOP:
+LOOP_mandar_caracteres:
     ;;meter datos en bianrio a TEMPH y TEMPL
    call BINARY_TO_DECIMAL
     
@@ -101,7 +86,8 @@ LOOP:
     
     goto    LOOP
 
-; --- Subrutina TX ---
+; --- Subrutina TX ---}
+    
 USART_TX:
     BANKSEL PIR1             ; Asegurar Banco 0
 ESPERAR:

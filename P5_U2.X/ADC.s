@@ -1,14 +1,4 @@
-; PIC16F877A Configuration Bit Settings
-  CONFIG  FOSC = XT
-  CONFIG  WDTE = OFF
-  CONFIG  PWRTE = OFF
-  CONFIG  BOREN = OFF
-  CONFIG  LVP = OFF
-  CONFIG  CPD = OFF
-  CONFIG  WRT = OFF
-  CONFIG  CP = OFF
-
-  #include <xc.inc>
+#include <xc.inc>
   
  ; Declaramos estas etiquetas como públicas (exportables)
     GLOBAL CONFIG_ADC
@@ -17,13 +7,10 @@
     
 TEMPL		EQU	0x73
 TEMPH		EQU	0x74
-CONT_RETARDO    EQU     0x77    ; Variable contador para la subrutina de 20us   
+CONT_RETARDO    EQU    0x77    ; Variable contador para la subrutina de 20us   
     
 PSECT   Code, delta=2
-        ORG     0x00
-        goto    INICIO
 
-        ORG     0x04
 	
 ; ==========================================================
 ; PROGRAMA PRINCIPAL

@@ -1,64 +1,32 @@
-; PIC16F877A Configuration Bit Settings
-  CONFIG  FOSC = XT
-  CONFIG  WDTE = OFF
-  CONFIG  PWRTE = OFF
-  CONFIG  BOREN = OFF
-  CONFIG  LVP = OFF
-  CONFIG  CPD = OFF
-  CONFIG  WRT = OFF
-  CONFIG  CP = OFF
 
   #include <xc.inc>
  
-W_TEMP      EQU 0x70
-STATUS_TEMP EQU 0x71
-PCLATH_TEMP EQU 0x72
-REG1        EQU 0x73
-	
 	
 PSECT   Code, delta=2
-        ORG     0x00
-        goto    INICIO
-
-        ORG     0x04
-	goto ISR
-    
-INICIO:
-;;------------------------------------------------------------------------
-;; CONFIGURAR PUERTOS
-;;------------------------------------------------------------------------
- 
-    goto MAIN
-    
-
-MAIN:
-    goto MAIN
 
     
-ISR:
-    ; GUARDAR CONTEXTO DE W Y STATUS
-    movwf   W_TEMP
-    swapf   STATUS,w
-    movwf   STATUS_TEMP
-    movf    PCLATH,w
-    movwf   PCLATH_TEMP
+Configuracion_PWM_CCP2:
+    BSF     STATUS, 5       ; Banco 1
+    MOVLW   0xFF            ; PR2 = 255 (Periodo máximo para aceleración suave)
+    MOVWF   PR2
+
+    BCF     TRISC, 1        ; Configuramos RC1 (pin del CCP2) como SALIDA
+
+    BCF     STATUS, 5       ; Banco 0
+
+    ; Configuración de CCP2CON
+    ; Bits 5-4 (Decimales): 00 (No los usamos)
+    ; Bits 3-0 (Modo): 1100 (Modo PWM)
+    MOVLW   0b00001100
+    MOVWF   CCP2CON
+
+    ; Inicializamos velocidad (Duty Cycle) en 0
+    CLRF    CCPR2L
     
-SALIR_ISR:
-    ; RESTAURAR CONTEXTO DE STATUS, PCLATH Y W Y SALIR
-    movf    PCLATH_TEMP,w
-    movwf   PCLATH
-    swapf   STATUS_TEMP, w
-    movwf   STATUS
-    swapf   W_TEMP, f
-    swapf   W_TEMP, w
-    retfie                   ; retornar de la interrupcion y volver al bucle
-
-
-
-ISR_USART:
-    movf RCREG,w
-    ; usar dato
-    return
+    ; El Timer 2 es necesario para que el PWM funcione
+    ; T2CON: Postscaler 1:1, Prescaler 1:1, TMR2ON = 1
+    MOVLW   0b00000100      ; Bit 2 en 1 enciende el Timer
+    MOVWF   T2CON
     
-
-    END
+    RETURN                  ; Regresamos al flujo principal
+    
