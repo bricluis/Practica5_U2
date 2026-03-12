@@ -3,10 +3,11 @@
  
 GLOBAL	Configuracion_PWM_CCP2
   
-PSECT   Code, delta=2
+PSECT PwmCode, class=CODE, delta=2
 
     
 Configuracion_PWM_CCP2:
+    
     BSF     STATUS, 5       ; Banco 1
     MOVLW   0xFF            ; PR2 = 255 (Periodo máximo para aceleración suave)
     MOVWF   PR2

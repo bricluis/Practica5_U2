@@ -1,13 +1,13 @@
 #include <xc.inc>
  
 
-TEMP_LCD    EQU 0x73
+TEMP_LCD    EQU 0x71
 ADDR_LCD    EQU 0x4E
-CONT1       EQU 0x75
-CONT2       EQU 0x76
+CONT1       EQU 0x72
+CONT2       EQU 0x73
 
  ; Declaramos estas etiquetas como públicas (exportables)
-    GLOBAL I2C_INIT_HW
+    GLOBAL I2C_INIT
     GLOBAL LCD_INIT
     GLOBAL LCD_SEND_DATA
     GLOBAL LCD_CMD
@@ -15,26 +15,31 @@ CONT2       EQU 0x76
 PSECT LcdCode, class=CODE, delta=2    
     
 ; --- INICIALIZACIÓN DE HARDWARE I2C ---
-I2C_INIT_HW:
-    BSF     STATUS, 5       ; Banco 1
+    
+I2C_INIT:
+    BSF     STATUS, 5       ; --- BANCO 1 ---
     MOVLW   0b00011000      ; RC3 y RC4 como entradas
     IORWF   TRISC, F
-    MOVLW   9               ; 100KHz a 4MHz
+    MOVLW   9               ; Velocidad: 100KHz a 4MHz
     MOVWF   SSPADD
-    BCF     STATUS, 5       ; Banco 0
-    MOVLW   0b00101000      ; MSSP Master
+    
+    MOVLW   0b10000000      ; Slew rate deshabilitado (para 100KHz)
+    MOVWF   SSPSTAT
+    
+    BCF     STATUS, 5       ; --- BANCO 0 ---
+    MOVLW   0b00101000      ; Habilitar MSSP como I2C Master
     MOVWF   SSPCON
     RETURN
  
 ; --- SUBRUTINAS I2C ---
 I2C_WAIT:
-    BSF     STATUS, 5
+    ; Esperamos a que la bandera SSPIF se ponga en 1 (terminó la operación)
 I2C_W_LP:
-    BTFSC   SSPSTAT, 2      ; R_W bit
+    BTFSS   PIR1, 3         ; PIR1, 3 es SSPIF (está en el Banco 0)
     GOTO    I2C_W_LP
-    BCF     STATUS, 5
+    BCF     PIR1, 3         ; Limpiamos la bandera para la próxima vez
     RETURN
-
+    
 I2C_INICIA:
     BSF     STATUS, 5
     BSF     SSPCON2, 0      ; SEN

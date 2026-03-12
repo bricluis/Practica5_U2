@@ -1,184 +1,167 @@
-; PIC16F877A Configuration Bit Settings
-  CONFIG  FOSC = XT
-  CONFIG  WDTE = OFF
-  CONFIG  PWRTE = OFF
-  CONFIG  BOREN = OFF
-  CONFIG  LVP = OFF
-  CONFIG  CPD = OFF
-  CONFIG  WRT = OFF
-  CONFIG  CP = OFF
-
 #include <xc.inc>
-  
-  ; Importamos las rutinas que viven en otros archivos
-    EXTERN CONFIG_ADC
-    EXTERN LEER_HUMEDAD
-    EXTERN LEER_TEMP
-    
-    EXTERN I2C_INIT_HW
-    EXTERN LCD_INIT
-    EXTERN LCD_SEND_DATA
-    
-DATO_LCD	EQU	0x70
-ADDR_LCD	EQU	0x71	    
-CENTENA		EQU	0x76
-DECENA		EQU	0x77
-UNIDAD		EQU	0x78
-CONT_RETARDO	EQU	0x79
-TEMPL		EQU	0X7A
-TEMPH		EQU	0x7B
-	
-	
-	
-PSECT   Code, delta=2
-        ORG     0x00
-        goto    INICIO
 
-        ORG     0x04
+; ==========================================================
+; VARIABLES COMPARTIDAS (Unbanked RAM 0x70 - 0x7F)
+; ==========================================================
+CENTENA     EQU 0x76
+DECENA      EQU 0x77
+UNIDAD      EQU 0x78
+TEMPL       EQU 0x7A
+TEMPH       EQU 0x7B
 
-    
+; Variables exclusivas del main para guardar las lecturas
+VAR_TEMP    EQU 0x7C    
+VAR_HUM     EQU 0x7D    
+
+; ==========================================================
+; IMPORTACIÓN DE SUBRUTINAS EXTERNAS
+; ==========================================================
+; Módulo ADC
+EXTRN CONFIG_ADC, LEER_HUMEDAD, LEER_TEMP
+; Módulo I2C/LCD
+EXTRN I2C_INIT, LCD_INIT, LCD_CMD, LCD_SEND_DATA
+; Módulo PWM
+EXTRN Configuracion_PWM_CCP2
+; Módulo USART
+EXTRN USART_CONFIG, MANDAR_DATOS, BINARY_TO_DECIMAL
+
+; ==========================================================
+; VECTOR DE RESET Y ARRANQUE
+; ==========================================================
+PSECT Code, class=CODE, delta=2
+
+ORG 0x00
+goto INICIO
+
 INICIO:
-    ; --- BANCO 1 ---
-    BANKSEL TRISC
-    bcf     TRISC, 6         ; TX DEBE SER SALIDA (0)
-    bsf     TRISC, 7         ; RX COMO ENTRADA (1)
-
-    movlw   25               ; 9600 bps @ 4MHz
-    movwf   SPBRG
-    
-    movlw   00100100B        ; TXEN=1, BRGH=1
-    movwf   TXSTA
-
-    ; --- BANCO 0 ---
-    BANKSEL RCSTA
-    bsf     RCSTA, 7         ; SPEN=1 (Encender puerto serial)
-
-;;CONFIGURCION ADC (PENDIENTE)
-    
+    ; --- INICIALIZACIÓN DE PERIFÉRICOS ---
     call    CONFIG_ADC
+    call    USART_CONFIG
+    call    I2C_INIT
+    call    LCD_INIT
+    call    Configuracion_PWM_CCP2
+
+MAIN_LOOP:
+    ; ======================================================
+    ; 1. LECTURA DE SENSORES
+    ; ======================================================
+    call    LEER_TEMP
+    movf    TEMPL, W
+    movwf   VAR_TEMP        ; Guardamos la temperatura de forma segura
+
+    call    LEER_HUMEDAD
+    movf    TEMPL, W
+    movwf   VAR_HUM         ; Guardamos la humedad de forma segura
+
+
+    ; ======================================================
+    ; 2. LÓGICA DE CONTROL (PWM)
+    ; ======================================================
     
-;;CONFIG I2C
-    CALL    I2C_INIT_HW     ; Configura pines y velocidad I2C
-    CALL    LCD_INIT        ; Prende y limpia el display
+; ¿Temperatura >= 30°C? (30°C equivale a 61 en el ADC)
+    movlw   61              ; Cargamos el umbral crudo
+    subwf   VAR_TEMP, W     ; Comparamos
+    btfsc   STATUS, 0       
+    goto    APAGAR_PWM
+
+EVALUAR_HUMEDAD:
+    ; Caso: Humedad Baja / Seco (Mayor o igual a 180)
+    movlw   180             
+    subwf   VAR_HUM, W
+    btfsc   STATUS, 0       ; Si Carry es 1, VAR_HUM >= 180
+    goto    PWM_MAXIMO
+
+    ; Caso: Humedad Media (Mayor o igual a 100)
+    ; Si el código llegó aquí, ya sabemos que es menor a 180
+    movlw   100             
+    subwf   VAR_HUM, W
+    btfsc   STATUS, 0       ; Si Carry es 1, VAR_HUM >= 100
+    goto    PWM_MITAD
+
+    ; Caso Default: Humedad Alta / Inundado (Menor a 100)
+    goto    APAGAR_PWM
+
+    ; --- ACCIONES DEL PWM ---
+PWM_MAXIMO:
+    movlw   0xFF            ; Duty cycle al 100%
+    movwf   CCPR2L
+    goto    ENVIAR_DATOS
+
+PWM_MITAD:
+    movlw   0x7F            ; Duty cycle al 50% (mitad de 255)
+    movwf   CCPR2L
+    goto    ENVIAR_DATOS
+
+APAGAR_PWM:
+    clrf    CCPR2L          ; Duty cycle al 0%
+    goto    ENVIAR_DATOS
+
+
+    ; ======================================================
+    ; 3. MOSTRAR DATOS (LCD E I2C)
+    ; ======================================================
+ENVIAR_DATOS:
     
-LOOP:
-    ;;GUARDA LO QUE ESTÁ EN VALOR_TEMPH EN TEMPH Y LO QUE ESTÁ EN VALORTEMPL EN TEMPL
-   call LEER_TEMP
-   ;;PASAR DATOS A TEMPH Y TEMPL
-   call BINARY_TO_DECIMAL
-    
-    movlw   'T'
-    call    USART_TX
-    movlw   ':'
-    call    USART_TX
-    movlw   ' '
-    call    USART_TX
-  
-       ; Imprimimos los enteros
-    movlw   0x30
-    addwf   CENTENA, W
-    call    USART_TX
-    
-    movlw   0x30
-    addwf   DECENA, W
-    call    USART_TX
-    
-    movlw   0x30
-    addwf   UNIDAD, W
-    call    USART_TX
-    
-    ;;GUARDA LO QUE ESTÁ EN VALOR_HUMH EN TEMPH Y LO QUE ESTÁ EN VALORHUML EN TEMPL
-   call LEER_HUMEDAD
-   ;;PASAR DATOS A TEMPH Y TEMPL
-   call BINARY_TO_DECIMAL 
-    
-    movlw   'C'       
-    call    USART_TX
-    movlw   ' '
-    call    USART_TX
-    
+    ; --- A) ENVÍO POR USART ---
+    ; Aquí llamamos a tu rutina que manda la trama armada a la PC
+    call    MANDAR_DATOS
+
+    ; --- B) ENVÍO POR I2C A LA LCD ---
+    ; FILA 1: HUMEDAD
+    movlw   0x80            ; Comando: Cursor a la Línea 1, Columna 0
+    call    LCD_CMD
     movlw   'H'
-    call    USART_TX
+    call    LCD_SEND_DATA
     movlw   ':'
-    call    USART_TX
-    
- ; Imprimimos los enteros
-    movlw   0x30
-    addwf   CENTENA, W
-    call    USART_TX
-    
-    movlw   0x30
-    addwf   DECENA, W
-    call    USART_TX
-    
-    movlw   0x30
-    addwf   UNIDAD, W
-    call    USART_TX
+    call    LCD_SEND_DATA
+    movlw   ' '
+    call    LCD_SEND_DATA
 
-    ; Salto de línea para que no se pegue el texto en la PC
-    movlw   0x0D             ; Retorno de carro (\r)
-    call    USART_TX
-    movlw   0x0A             ; Salto de línea (\n)
-    call    USART_TX
-    
-    goto    LOOP
+    ; Procesar Humedad a Decimal
+    movf    VAR_HUM, W
+    movwf   TEMPL           ; Le pasamos el dato a BINARY_TO_DECIMAL
+    clrf    TEMPH           
+    call    BINARY_TO_DECIMAL
 
-; --- Subrutina TX ---
-USART_TX:
-    BANKSEL PIR1             ; Asegurar Banco 0
-ESPERAR:
-    btfss   PIR1, 4          ; ¿Está el buffer vacío?
-    goto    ESPERAR          ; No, esperar
-    movwf   TXREG            ; Sí, mandar el dato (limpia TXIF automáticamente)
-    return
+    ; Imprimir Centena, Decena y Unidad (+0x30 para pasarlo a código ASCII)
+    movf    CENTENA, W
+    addlw   0x30
+    call    LCD_SEND_DATA
+    movf    DECENA, W
+    addlw   0x30
+    call    LCD_SEND_DATA
+    movf    UNIDAD, W
+    addlw   0x30
+    call    LCD_SEND_DATA
 
-    
- BINARY_TO_DECIMAL:
-    
-clrf CENTENA
-clrf DECENA
-clrf UNIDAD
+    ; FILA 2: TEMPERATURA
+    movlw   0xC0            ; Comando: Cursor a la Línea 2, Columna 0
+    call    LCD_CMD
+    movlw   'T'
+    call    LCD_SEND_DATA
+    movlw   ':'
+    call    LCD_SEND_DATA
+    movlw   ' '
+    call    LCD_SEND_DATA
 
-    
-    RESTACIEN:
-    movlw   0x64
-    subwf   TEMPL, f
-    movlw   0x00
-    btfss   STATUS, 0
-    addlw   1
-    subwf   TEMPH, f
-    btfsc   STATUS, 0
-    goto    CIEN
-    
-    ; Restore
-    movlw   0x64
-    addwf   TEMPL, f
+    ; Procesar Temperatura a Decimal
+    movf    VAR_TEMP, W
+    movwf   TEMPL
+    clrf    TEMPH
+    call    BINARY_TO_DECIMAL
 
-RESTADIEZ:
-    movlw   0x0A
-    subwf   TEMPL, f
-    btfsc   STATUS, 0
-    goto    DIEZ
-    ; Restore
-    movlw   0x0A
-    addwf   TEMPL, f
+    ; Imprimir Centena, Decena y Unidad de la Temp
+    movf    CENTENA, W
+    addlw   0x30
+    call    LCD_SEND_DATA
+    movf    DECENA, W
+    addlw   0x30
+    call    LCD_SEND_DATA
+    movf    UNIDAD, W
+    addlw   0x30
+    call    LCD_SEND_DATA
 
-RESTAUNO:
-    movlw   0x01
-    subwf   TEMPL, f
-    btfsc   STATUS, 0
-    goto    UNO
-    
-    return
+    ; Volver a iniciar el ciclo
+    goto    MAIN_LOOP
 
-CIEN:
-    incf    CENTENA, f
-    goto    RESTACIEN
-DIEZ:
-    incf    DECENA, f
-    goto    RESTADIEZ
-UNO:
-    incf    UNIDAD, f
-    goto    RESTAUNO
-
-    END
+    END     INICIO

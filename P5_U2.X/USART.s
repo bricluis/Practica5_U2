@@ -1,16 +1,22 @@
 #include <xc.inc>
      
-CENTENA	EQU	0x076
-DECENA	EQU	0x077
-UNIDAD	EQU	0x078
-TEMPL	EQU	0X7A
-TEMPH	EQU	0x7B
-	
+CENTENA     EQU 0x76
+DECENA      EQU 0x77
+UNIDAD      EQU 0x78
+TEMPL       EQU 0x7A
+TEMPH       EQU 0x7B
+
+; --- AGREGAMOS LAS VARIABLES QUE EL MAIN USA ---
+VAR_TEMP    EQU 0x7C    
+VAR_HUM     EQU 0x7D
+       
 GLOBAL	USART_CONFIG
 GLOBAL	USART_TX
 GLOBAL	BINARY_TO_DECIMAL
+GLOBAL	MANDAR_DATOS
+  
 	
-PSECT   Code, delta=2
+PSECT UsartCode, class=CODE, delta=2
 
 USART_CONFIG:
     ; --- BANCO 1 ---
@@ -27,11 +33,19 @@ USART_CONFIG:
     ; --- BANCO 0 ---
     BANKSEL RCSTA
     bsf     RCSTA, 7         ; SPEN=1 (Encender puerto serial)
+    
+return
 
-
-LOOP_mandar_caracteres:
-    ;;meter datos en bianrio a TEMPH y TEMPL
-   call BINARY_TO_DECIMAL
+MANDAR_DATOS:
+    ; =========================================
+    ; 1. PROCESAR Y MANDAR TEMPERATURA
+    ; =========================================
+    bcf     STATUS, 0       ; Limpiar Carry
+    movf    VAR_TEMP, W     ; Jalamos la lectura cruda del ADC
+    movwf   TEMPL
+    rrf     TEMPL, f        ; Dividimos entre 2 para sacar los Grados Celsius
+    clrf    TEMPH
+    call    BINARY_TO_DECIMAL
     
     movlw   'T'
     call    USART_TX
@@ -40,7 +54,7 @@ LOOP_mandar_caracteres:
     movlw   ' '
     call    USART_TX
   
-       ; Imprimimos los enteros
+    ; Imprimimos los enteros
     movlw   0x30
     addwf   CENTENA, W
     call    USART_TX
@@ -53,20 +67,27 @@ LOOP_mandar_caracteres:
     addwf   UNIDAD, W
     call    USART_TX
     
-   ;;meter datos en bianrio a TEMPH y TEMPL
-   call BINARY_TO_DECIMAL 
-    
-    movlw   'C'       
+    movlw   'C'        
     call    USART_TX
     movlw   ' '
     call    USART_TX
+
+    ; =========================================
+    ; 2. PROCESAR Y MANDAR HUMEDAD
+    ; =========================================
+    movf    VAR_HUM, W      ; Jalamos la lectura del ADC de Humedad
+    movwf   TEMPL           ; (Esta la mandamos directo, sin dividir)
+    clrf    TEMPH
+    call    BINARY_TO_DECIMAL 
     
     movlw   'H'
     call    USART_TX
     movlw   ':'
     call    USART_TX
+    movlw   ' '
+    call    USART_TX
     
- ; Imprimimos los enteros
+    ; Imprimimos los enteros
     movlw   0x30
     addwf   CENTENA, W
     call    USART_TX
@@ -79,13 +100,13 @@ LOOP_mandar_caracteres:
     addwf   UNIDAD, W
     call    USART_TX
 
-    ; Salto de línea para que no se pegue el texto en la PC
+    ; Salto de línea para la PC
     movlw   0x0D             ; Retorno de carro (\r)
     call    USART_TX
     movlw   0x0A             ; Salto de línea (\n)
     call    USART_TX
     
-    goto    LOOP
+    RETURN
 
 ; --- Subrutina TX ---}
     

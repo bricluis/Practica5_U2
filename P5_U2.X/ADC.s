@@ -5,28 +5,12 @@
     GLOBAL LEER_HUMEDAD
     GLOBAL LEER_TEMP
     
-TEMPL		EQU	0x73
-TEMPH		EQU	0x74
-CONT_RETARDO    EQU    0x77    ; Variable contador para la subrutina de 20us   
+TEMPL		EQU 0x7A
+TEMPH		 EQU 0x7B
+CONT_RETARDO    EQU    0x70    ; Variable contador para la subrutina de 20us   
     
-PSECT   Code, delta=2
-
+PSECT AdcCode, class=CODE, delta=2
 	
-; ==========================================================
-; PROGRAMA PRINCIPAL
-; ==========================================================
-INICIO:
-        call    CONFIG_ADC      ; 1. Configura el módulo ADC
-        ; (Aquí llamaremos a CONFIG_PWM y CONFIG_USART después)
-        goto    MAIN_LOOP       ; 2. Entra al ciclo infinito
-
-MAIN_LOOP:
-        call    LEER_HUMEDAD    ; Actualiza las variables de humedad
-        call    LEER_TEMP       ; Actualiza las variables de temperatura
-        
-        ; Aquí llamarás a las rutinas que calculan si prender el PWM
-        ; y si enviar los datos por el USART a la PC.
-        goto    MAIN_LOOP
 
 ; ==========================================================
 ; SUBRUTINAS DE CONFIGURACIÓN
@@ -45,11 +29,19 @@ CONFIG_ADC:
 ; SUBRUTINAS DE LECTURA Y RETARDO
 ; ==========================================================
 LEER_HUMEDAD:
+        banksel ADCON1
+        bcf     ADCON1, 7       ; ¡JUSTIFICACIÓN IZQUIERDA! (Para leer los 5V completos en 8 bits)
+        
         banksel ADCON0
-        movlw   0b01000001     ; Canal 0 (AN0)
-        movwf   ADCON0
-        call    RETARDO_20US    
-        bsf     ADCON0, 1       ; 1 es el bit GO en XC8
+        movlw   0b01000001      ; Canal 0 (AN0)
+        call	 RETARDO_20US
+
+        banksel ADRESH
+        movf    ADRESH, W
+        banksel TEMPL
+        movwf   TEMPL
+        return
+
 ESPERA_HUMEDAD:
         btfsc   ADCON0, 1       
         goto    ESPERA_HUMEDAD  
@@ -65,12 +57,15 @@ ESPERA_HUMEDAD:
         movwf   TEMPH ;; usar la variable de luis
         return
  
+
 LEER_TEMP:
+        banksel ADCON1
+        bsf     ADCON1, 7       ; ¡JUSTIFICACIÓN DERECHA! (Regresamos al modo del LM35)
+        
         banksel ADCON0
-        movlw   0b01001001     ; Canal 1 (AN1) 
-        movwf   ADCON0
-        call    RETARDO_20US    
-        bsf     ADCON0, 1       
+        movlw   0b01001001      ; Canal 1 (AN1)
+        ; ... (resto del código de lectura igual, leyendo ADRESL)
+	
 ESPERA_TEMP:
         btfsc   ADCON0, 1
         goto    ESPERA_TEMP
