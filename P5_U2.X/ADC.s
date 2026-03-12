@@ -30,31 +30,24 @@ CONFIG_ADC:
 ; ==========================================================
 LEER_HUMEDAD:
         banksel ADCON1
-        bcf     ADCON1, 7       ; ¡JUSTIFICACIÓN IZQUIERDA! (Para leer los 5V completos en 8 bits)
+        bcf     ADCON1, 7       ; ¡JUSTIFICACIÓN IZQUIERDA! 
         
         banksel ADCON0
         movlw   0b01000001      ; Canal 0 (AN0)
-        call	 RETARDO_20US
+        movwf   ADCON0          ; <--- ¡Te faltó esta línea para guardar la config!
+        call    RETARDO_20US
+
+        ; --- ¡FALTABA ESTO! ---
+        bsf     ADCON0, 1       ; Iniciamos conversión (GO)
+ESPERA_HUMEDAD:
+        btfsc   ADCON0, 1       ; Esperamos a que termine
+        goto    ESPERA_HUMEDAD  
+        ; ----------------------
 
         banksel ADRESH
-        movf    ADRESH, W
+        movf    ADRESH, W       ; Leemos el valor justificado a la izquierda
         banksel TEMPL
         movwf   TEMPL
-        return
-
-ESPERA_HUMEDAD:
-        btfsc   ADCON0, 1       
-        goto    ESPERA_HUMEDAD  
-        
-        banksel ADRESL
-        movf    ADRESL, W
-        banksel TEMPL
-        movwf   TEMPL ;; usar la variable de luis
-        
-        banksel ADRESH
-        movf    ADRESH, W
-        banksel TEMPH
-        movwf   TEMPH ;; usar la variable de luis
         return
  
 
