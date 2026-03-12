@@ -15,15 +15,8 @@
     GLOBAL LEER_HUMEDAD
     GLOBAL LEER_TEMP
     
-W_TEMP		EQU	0x70
-STATUS_TEMP	EQU	0x71
-PCLATH_TEMP	EQU	0x72
 TEMPL		EQU	0x73
 TEMPH		EQU	0x74
-;VALOR_HUM_L     EQU     0x73    ; Guarda los 8 bits bajos del ADC (Humedad)
-;VALOR_HUM_H     EQU     0x74    ; Guarda los 2 bits altos del ADC (Humedad)
-;VALOR_TEMP_L    EQU     0x75    ; Guarda los 8 bits bajos del ADC (Temp.)
-;VALOR_TEMP_H    EQU     0x76    ; Guarda los 2 bits altos del ADC (Temp.)
 CONT_RETARDO    EQU     0x77    ; Variable contador para la subrutina de 20us   
     
 PSECT   Code, delta=2

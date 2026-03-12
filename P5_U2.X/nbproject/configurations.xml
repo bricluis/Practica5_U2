@@ -19,9 +19,9 @@
                    projectFiles="true">
       <itemPath>USART.s</itemPath>
       <itemPath>main.s</itemPath>
-      <itemPath>SPI.s</itemPath>
       <itemPath>ADC.s</itemPath>
       <itemPath>PWM.s</itemPath>
+      <itemPath>I2C.s</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>

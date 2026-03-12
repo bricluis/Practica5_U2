@@ -9,17 +9,10 @@
   CONFIG  CP = OFF
 
 #include <xc.inc>
- 
-W_TEMP      EQU 0x70
-STATUS_TEMP EQU 0x71
-PCLATH_TEMP EQU 0x72
-REG1        EQU 0x73
-TEMP	    EQU 0x74
-HUM	    EQU 0x75	    
-        CENTENA	EQU 0x076
-	DECENA	EQU 0x077
-        UNIDAD	EQU 0x078
-CONT1	EQU	0x79
+     
+CENTENA	EQU	0x076
+DECENA	EQU	0x077
+UNIDAD	EQU	0x078
 TEMPL	EQU	0X7A
 TEMPH	EQU	0x7B
 	
@@ -30,7 +23,7 @@ PSECT   Code, delta=2
         goto    INICIO
 
         ORG     0x04
-	goto ISR
+
     
 INICIO:
     ; --- BANCO 1 ---
@@ -165,19 +158,5 @@ DIEZ:
 UNO:
     incf    UNIDAD, f
     goto    RESTAUNO
-ISR:
-    ; GUARDAR CONTEXTO DE W Y STATUS
-    movwf   W_TEMP
-    swapf   STATUS, w
-    movwf   STATUS_TEMP
-
-
-SALIR_ISR:
-    ; RESTAURAR CONTEXTO DE STATUS Y W Y SALIR
-    swapf   STATUS_TEMP, w
-    movwf   STATUS
-    swapf   W_TEMP, f
-    swapf   W_TEMP, w
-    retfie                   ; retornar de la interrupcion y volver al bucle
 
     END

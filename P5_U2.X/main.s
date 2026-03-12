@@ -11,22 +11,22 @@
 #include <xc.inc>
   
   ; Importamos las rutinas que viven en otros archivos
-    EXTRN CONFIG_ADC
-    EXTRN LEER_HUMEDAD
-    EXTRN LEER_TEMP
- 
-W_TEMP      EQU 0x70
-STATUS_TEMP EQU 0x71
-PCLATH_TEMP EQU 0x72
-REG1        EQU 0x73
-TEMP	    EQU 0x74
-HUM	    EQU 0x75	    
-        CENTENA	EQU 0x076
-	DECENA	EQU 0x077
-        UNIDAD	EQU 0x078
-CONT1	EQU	0x79
-TEMPL	EQU	0X7A
-TEMPH	EQU	0x7B
+    EXTERN CONFIG_ADC
+    EXTERN LEER_HUMEDAD
+    EXTERN LEER_TEMP
+    
+    EXTERN I2C_INIT_HW
+    EXTERN LCD_INIT
+    EXTERN LCD_SEND_DATA
+    
+DATO_LCD	EQU	0x70
+ADDR_LCD	EQU	0x71	    
+CENTENA		EQU	0x76
+DECENA		EQU	0x77
+UNIDAD		EQU	0x78
+CONT_RETARDO	EQU	0x79
+TEMPL		EQU	0X7A
+TEMPH		EQU	0x7B
 	
 	
 	
@@ -35,7 +35,7 @@ PSECT   Code, delta=2
         goto    INICIO
 
         ORG     0x04
-	goto ISR
+
     
 INICIO:
     ; --- BANCO 1 ---
@@ -56,6 +56,10 @@ INICIO:
 ;;CONFIGURCION ADC (PENDIENTE)
     
     call    CONFIG_ADC
+    
+;;CONFIG I2C
+    CALL    I2C_INIT_HW     ; Configura pines y velocidad I2C
+    CALL    LCD_INIT        ; Prende y limpia el display
     
 LOOP:
     ;;GUARDA LO QUE ESTÁ EN VALOR_TEMPH EN TEMPH Y LO QUE ESTÁ EN VALORTEMPL EN TEMPL
@@ -176,19 +180,5 @@ DIEZ:
 UNO:
     incf    UNIDAD, f
     goto    RESTAUNO
-ISR:
-    ; GUARDAR CONTEXTO DE W Y STATUS
-    movwf   W_TEMP
-    swapf   STATUS, w
-    movwf   STATUS_TEMP
-
-
-SALIR_ISR:
-    ; RESTAURAR CONTEXTO DE STATUS Y W Y SALIR
-    swapf   STATUS_TEMP, w
-    movwf   STATUS
-    swapf   W_TEMP, f
-    swapf   W_TEMP, w
-    retfie                   ; retornar de la interrupcion y volver al bucle
 
     END
