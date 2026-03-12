@@ -1,4 +1,13 @@
 #include <xc.inc>
+; PIC16F877A Configuration Bit Settings
+  CONFIG  FOSC = XT
+  CONFIG  WDTE = OFF
+  CONFIG  PWRTE = OFF
+  CONFIG  BOREN = OFF
+  CONFIG  LVP = OFF
+  CONFIG  CPD = OFF
+  CONFIG  WRT = OFF
+  CONFIG  CP = OFF
 
 ; ==========================================================
 ; VARIABLES COMPARTIDAS (Unbanked RAM 0x70 - 0x7F)
