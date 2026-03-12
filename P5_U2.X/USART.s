@@ -16,7 +16,7 @@ GLOBAL	BINARY_TO_DECIMAL
 GLOBAL	MANDAR_DATOS
   
 	
-PSECT UsartCode, class=CODE, delta=2
+PSECT   Code, delta=2
 
 USART_CONFIG:
     ; --- BANCO 1 ---

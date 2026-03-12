@@ -9,7 +9,7 @@ TEMPL		EQU 0x7A
 TEMPH		 EQU 0x7B
 CONT_RETARDO    EQU    0x70    ; Variable contador para la subrutina de 20us   
     
-PSECT AdcCode, class=CODE, delta=2
+PSECT   Code, delta=2
 	
 
 ; ==========================================================

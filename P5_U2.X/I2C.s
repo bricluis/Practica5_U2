@@ -2,7 +2,7 @@
  
 
 TEMP_LCD    EQU 0x71
-ADDR_LCD    EQU 0x4E
+ADDR_LCD    EQU 0x3F
 CONT1       EQU 0x72
 CONT2       EQU 0x73
 
@@ -12,7 +12,7 @@ CONT2       EQU 0x73
     GLOBAL LCD_SEND_DATA
     GLOBAL LCD_CMD
 
-PSECT LcdCode, class=CODE, delta=2    
+PSECT   Code, delta=2
     
 ; --- INICIALIZACIÓN DE HARDWARE I2C ---
     

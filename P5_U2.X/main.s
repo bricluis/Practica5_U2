@@ -37,7 +37,7 @@ EXTRN USART_CONFIG, MANDAR_DATOS, BINARY_TO_DECIMAL
 ; ==========================================================
 ; VECTOR DE RESET Y ARRANQUE
 ; ==========================================================
-PSECT Code, class=CODE, delta=2
+PSECT   Code, delta=2
 
 ORG 0x00
 goto INICIO

@@ -3,7 +3,7 @@
  
 GLOBAL	Configuracion_PWM_CCP2
   
-PSECT PwmCode, class=CODE, delta=2
+PSECT   Code, delta=2
 
     
 Configuracion_PWM_CCP2:
