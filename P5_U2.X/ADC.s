@@ -53,25 +53,27 @@ ESPERA_HUMEDAD:
 
 LEER_TEMP:
         banksel ADCON1
-        bsf     ADCON1, 7       ; ¡JUSTIFICACIÓN DERECHA! (Regresamos al modo del LM35)
+        bsf     ADCON1, 7       ; ¡JUSTIFICACIÓN DERECHA! (Para el LM35)
         
         banksel ADCON0
         movlw   0b01001001      ; Canal 1 (AN1)
-        ; ... (resto del código de lectura igual, leyendo ADRESL)
-	
+        movwf   ADCON0          ; ¡Cargamos el canal!
+        call    RETARDO_20US    ; Damos tiempo al capacitor interno
+
+        bsf     ADCON0, 1       ; Arrancamos conversión de temperatura
 ESPERA_TEMP:
-        btfsc   ADCON0, 1
+        btfsc   ADCON0, 1       ; Esperamos a que termine
         goto    ESPERA_TEMP
         
         banksel ADRESL
         movf    ADRESL, W
-        banksel TEMPL;; usar la variable de luis
-        movwf   TEMPL
+        banksel TEMPL
+        movwf   TEMPL           ; Guardamos parte baja (la que usamos para dividir)
         
         banksel ADRESH
         movf    ADRESH, W
-        banksel TEMPH ;; usar la variable de luis
-        movwf   TEMPH
+        banksel TEMPH 
+        movwf   TEMPH           ; Guardamos parte alta (por si acaso)
         return
         
 RETARDO_20US:

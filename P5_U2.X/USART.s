@@ -126,19 +126,14 @@ clrf DECENA
 clrf UNIDAD
 
     
-    RESTACIEN:
-    movlw   0x64
-    subwf   TEMPL, f
-    movlw   0x00
-    btfss   STATUS, 0
-    addlw   1
-    subwf   TEMPH, f
-    btfsc   STATUS, 0
-    goto    CIEN
-    
-    ; Restore
-    movlw   0x64
+RESTACIEN:
+    movlw   0x64            ; W = 100
+    subwf   TEMPL, f        ; TEMPL = TEMPL - 100
+    btfsc   STATUS, 0       ; ¿Carry=1? (no hubo borrow = cabe)
+    goto    CIEN            ; Sí cabe ? contar centena
+    movlw   0x64            ; No cabe ? restaurar
     addwf   TEMPL, f
+    goto    RESTADIEZ       ; Pasar a decenas
 
 RESTADIEZ:
     movlw   0x0A
@@ -151,11 +146,12 @@ RESTADIEZ:
 
 RESTAUNO:
     movlw   0x01
-    subwf   TEMPL, f
-    btfsc   STATUS, 0
+    subwf   TEMPL, f        ; TEMPL = TEMPL - 1
+    btfsc   STATUS, 0       ; ¿Carry=1? (cabe)
     goto    UNO
-    
-    return
+    movlw   0x01            ; No cabe ? restaurar
+    addwf   TEMPL, f
+    return                  ; TEMPL debe quedar en 0
 
 CIEN:
     incf    CENTENA, f
@@ -166,5 +162,3 @@ DIEZ:
 UNO:
     incf    UNIDAD, f
     goto    RESTAUNO
-
-    END

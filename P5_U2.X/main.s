@@ -16,13 +16,13 @@ VAR_HUM     EQU 0x7D
 ; ==========================================================
 ; IMPORTACIÓN DE SUBRUTINAS EXTERNAS
 ; ==========================================================
-; Módulo ADC
+; Modulo ADC
 EXTRN CONFIG_ADC, LEER_HUMEDAD, LEER_TEMP
-; Módulo I2C/LCD
+; Modulo I2C/LCD
 EXTRN I2C_INIT, LCD_INIT, LCD_CMD, LCD_SEND_DATA
-; Módulo PWM
+; Modulo PWM
 EXTRN Configuracion_PWM_CCP2
-; Módulo USART
+; Modulo USART
 EXTRN USART_CONFIG, MANDAR_DATOS, BINARY_TO_DECIMAL
 
 ; ==========================================================

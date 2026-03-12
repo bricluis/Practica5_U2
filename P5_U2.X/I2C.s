@@ -41,14 +41,14 @@ I2C_W_LP:
     RETURN
     
 I2C_INICIA:
-    BSF     STATUS, 5
+    banksel SSPCON2
     BSF     SSPCON2, 0      ; SEN
     BCF     STATUS, 5
     CALL    I2C_WAIT
     RETURN
 
 I2C_TERMINA:
-    BSF     STATUS, 5
+    banksel SSPCON2
     BSF     SSPCON2, 2      ; PEN
     BCF     STATUS, 5
     CALL    I2C_WAIT
@@ -147,5 +147,3 @@ DELAY_LOOP1:
     DECFSZ  CONT2, F
     GOTO    DELAY_LOOP2
     RETURN
-
-END
