@@ -6,7 +6,9 @@ UNIDAD	EQU	0x078
 TEMPL	EQU	0X7A
 TEMPH	EQU	0x7B
 	
-	
+GLOBAL	USART_CONFIG
+GLOBAL	USART_TX
+GLOBAL	BINARY_TO_DECIMAL
 	
 PSECT   Code, delta=2
 
@@ -26,7 +28,6 @@ USART_CONFIG:
     BANKSEL RCSTA
     bsf     RCSTA, 7         ; SPEN=1 (Encender puerto serial)
 
-;;CONFIGURCION ADC (PENDIENTE)
 
 LOOP_mandar_caracteres:
     ;;meter datos en bianrio a TEMPH y TEMPL

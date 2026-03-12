@@ -1,7 +1,8 @@
 
   #include <xc.inc>
  
-	
+GLOBAL	Configuracion_PWM_CCP2
+  
 PSECT   Code, delta=2
 
     
