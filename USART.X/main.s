@@ -1,5 +1,15 @@
 #include <xc.inc>
-     
+; PIC16F877A Configuration Bit Settings
+  CONFIG  FOSC = XT
+  CONFIG  WDTE = OFF
+  CONFIG  PWRTE = OFF
+  CONFIG  BOREN = OFF
+  CONFIG  LVP = OFF
+  CONFIG  CPD = OFF
+  CONFIG  WRT = OFF
+  CONFIG  CP = OFF
+
+
 CENTENA     EQU 0x76
 DECENA      EQU 0x77
 UNIDAD      EQU 0x78
@@ -9,25 +19,35 @@ TEMPH       EQU 0x7B
 ; --- AGREGAMOS LAS VARIABLES QUE EL MAIN USA ---
 VAR_TEMP    EQU 0x7C    
 VAR_HUM     EQU 0x7D
-       
-GLOBAL	USART_CONFIG
-GLOBAL	USART_TX
-GLOBAL	BINARY_TO_DECIMAL
-GLOBAL	MANDAR_DATOS
+
   
-psect USART_data, class=CODE, delta=2
-     
+; ==========================================================
+; VECTOR DE RESET Y ARRANQUE
+; ==========================================================
+PSECT   Code, delta=2
+
+ORG 0x00
+goto INICIO
+
+   INICIO:
+    
+    
+    call    USART_CONFIG
+    
+    call MANDAR_DATOS
+    
+    goto INICIO
+    
 USART_CONFIG:
     ; --- BANCO 1 ---
     BANKSEL TRISC
-    bsf     TRISC, 6         ;;EL DATASHEET DICE QUE AMBOS VAN SETTEADOS, CSM CHAT Y GEMINI
-    bsf     TRISC, 7         
+    bcf     TRISC, 6         ; TX DEBE SER SALIDA (0)
+    bsf     TRISC, 7         ; RX COMO ENTRADA (1)
 
     movlw   25               ; 9600 bps @ 4MHz
     movwf   SPBRG
     
-    movlw   0b00100100        
-    ; bit 7: Clock select x for asynchronous, bit 6: TX9, 0 for 8 bits. bit 5: TXEN. bit 4: SYNC, 0 for async. bit 3: U. bit 2: 1   bit 1: Transmit Shift Status. bit 0: TX9D, not used
+    movlw   0b00100100        ; TXEN=1, BRGH=1
     movwf   TXSTA
 
     ; --- BANCO 0 ---
@@ -65,9 +85,6 @@ MANDAR_DATOS:
     
     movlw   0x30
     addwf   UNIDAD, W
-    call    USART_TX
-    
-    movlw   ' '
     call    USART_TX
     
     movlw   'C'        

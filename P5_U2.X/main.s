@@ -26,22 +26,30 @@ VAR_HUM     EQU 0x7D
 ; IMPORTACIÓN DE SUBRUTINAS EXTERNAS
 ; ==========================================================
 ; Modulo ADC
-EXTRN CONFIG_ADC, LEER_HUMEDAD, LEER_TEMP
+GLOBAL CONFIG_ADC
+GLOBAL LEER_HUMEDAD
+GLOBAL LEER_TEMP
 ; Modulo I2C/LCD
-EXTRN I2C_INIT, LCD_INIT, LCD_CMD, LCD_SEND_DATA
+GLOBAL I2C_INIT
+GLOBAL LCD_INIT
+GLOBAL LCD_CMD
+GLOBAL LCD_SEND_DATA
 ; Modulo PWM
-EXTRN Configuracion_PWM_CCP2
+GLOBAL Configuracion_PWM_CCP2
 ; Modulo USART
-EXTRN USART_CONFIG, MANDAR_DATOS, BINARY_TO_DECIMAL
+GLOBAL USART_CONFIG
+GLOBAL MANDAR_DATOS
+GLOBAL BINARY_TO_DECIMAL
 
 ; ==========================================================
 ; VECTOR DE RESET Y ARRANQUE
 ; ==========================================================
-PSECT   Code, delta=2
-
-ORG 0x00
+PSECT reset_vec, class=CODE, delta=2, abs
+ORG 0x0000
 goto INICIO
-
+     
+PSECT MainCode, class=CODE, delta=2
+     
 INICIO:
     ; --- INICIALIZACIÓN DE PERIFÉRICOS ---
     call    CONFIG_ADC

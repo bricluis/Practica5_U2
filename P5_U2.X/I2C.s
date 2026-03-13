@@ -2,7 +2,7 @@
  
 
 TEMP_LCD    EQU 0x71
-ADDR_LCD    EQU 0x3F
+ADDR_LCD    EQU 0x4E
 CONT1       EQU 0x72
 CONT2       EQU 0x73
 
@@ -12,8 +12,7 @@ CONT2       EQU 0x73
     GLOBAL LCD_SEND_DATA
     GLOBAL LCD_CMD
 
-PSECT   Code, delta=2
-    
+psect I2C_data, class=CODE, delta=2
 ; --- INICIALIZACIÓN DE HARDWARE I2C ---
     
 I2C_INIT:
@@ -28,7 +27,7 @@ I2C_INIT:
     
     BCF     STATUS, 5       ; --- BANCO 0 ---
     MOVLW   0b00101000      ; Habilitar MSSP como I2C Master
-    MOVWF   SSPCON
+    MOVWF   SSPCON1
     RETURN
  
 ; --- SUBRUTINAS I2C ---

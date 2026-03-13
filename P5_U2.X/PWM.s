@@ -3,9 +3,8 @@
  
 GLOBAL	Configuracion_PWM_CCP2
   
-PSECT   Code, delta=2
-
-    
+psect PWM_module, class=CODE, delta=2 
+  
 Configuracion_PWM_CCP2:
     
     BSF     STATUS, 5       ; Banco 1
